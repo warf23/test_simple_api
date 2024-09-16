@@ -6,15 +6,16 @@ from langchain.chains.summarize import load_summarize_chain
 import os
 import logging
 from dotenv import load_dotenv
+from flask_cors import CORS
 
 # Load environment variables
 load_dotenv()
-
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+CORS(app) 
 
 # Initialize the language model
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -34,10 +35,15 @@ URL Content:
 prompt = PromptTemplate(template=prompt_template, input_variables=["text", "language"])
 summarize_chain = load_summarize_chain(llm=llm, chain_type="stuff", prompt=prompt)
 
+# Add this for Vercel
+@app.route('/')
+def home():
+    return "YouTube Summarizer API is running!"
+
 @app.route('/summarize', methods=['POST'])
 def summarize_youtube_video():
     try:
-        data = request.json
+        data = request.get_json()
         youtube_url = data.get('youtube_url')
         language = data.get('language', 'English')  # Default to English if not specified
         
